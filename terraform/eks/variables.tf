@@ -1,21 +1,3 @@
-variable "github_owner" {
-  description = "GitHub organization or username"
-  type        = string
-  default     = "your-github-owner"
-}
-
-variable "github_repo" {
-  description = "GitHub repository name"
-  type        = string
-  default     = "your-repo-name"
-}
-
-variable "github_oauth_token" {
-  description = "GitHub OAuth Token for CodePipeline access"
-  type        = string
-  sensitive   = true
-}
-
 variable "aws_region" {
   description = "AWS region where resources will be created"
   type        = string
