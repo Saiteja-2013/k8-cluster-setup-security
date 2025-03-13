@@ -1,0 +1,36 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      docker: 20
+    commands:
+      - echo "Installing Terraform & Kubectl"
+      - curl -LO "https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip"
+      - unzip terraform_1.6.0_linux_amd64.zip
+      - mv terraform /usr/local/bin/
+      - terraform --version
+      - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+      - chmod +x kubectl
+      - mv kubectl /usr/local/bin/
+
+  pre_build:
+    commands:
+      - echo "Authenticating with AWS EKS..."
+      - aws eks update-kubeconfig --name my-cluster --region us-east-1
+
+  build:
+    commands:
+      - echo "Running Terraform Apply..."
+      - cd terraform/eks
+      - terraform init
+      - terraform apply -auto-approve
+      - echo "Applying Kubernetes Security Policies..."
+      - kubectl apply -f ../../k8s-manifests/security/
+      - kubectl apply -f ../../k8s-manifests/secrets/
+      - echo "Deploying Application..."
+      - kubectl apply -f ../../k8s-manifests/deployments/
+
+  post_build:
+    commands:
+      - echo "Deployment Complete!"
