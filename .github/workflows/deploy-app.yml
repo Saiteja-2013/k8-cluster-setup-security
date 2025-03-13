@@ -1,0 +1,59 @@
+name: Deploy to Kubernetes
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'k8s-manifests/**'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'k8s-manifests/**'
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Run Trivy Security Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "config"
+          scan-ref: "./k8s-manifests/"
+
+  deploy:
+    needs: security-scan
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-role
+          aws-region: us-east-1
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name my-cluster --region us-east-1
+
+      - name: Apply Kubernetes Security Policies
+        run: |
+          kubectl apply -f k8s-manifests/security/
+          kubectl apply -f k8s-manifests/secrets/
+
+      - name: Deploy Application
+        run: |
+          kubectl apply -f k8s-manifests/deployments/
