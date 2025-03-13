@@ -9,7 +9,7 @@ metadata:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
 spec:
   rules:
-    - host: "my-app.example.com"  # Replace with your actual domain name
+    - host: "my-app.example.com" 
       http:
         paths:
           - path: "/"
